@@ -72,3 +72,8 @@ for bamFile in *.sorted.bam;do
   samtools depth $bamFile | awk '{{sum+=$3}} END {{print "Average = ",sum/NR}}' > $output.cov
   samtools flagstat $bamFile > $output.stat
 done
+#7- Mark duplicate
+for sample in *.sorted.bam;do
+  name=${sample%.sorted.bam}
+  java  -Xmx2g -jar $picard_path/picard.jar MarkDuplicates INPUT=$sample OUTPUT=$name.dedup.bam METRICS_FILE=$name.metrics.txt;
+done
