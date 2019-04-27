@@ -26,6 +26,11 @@ mkdir $runDir
 cd $runDir
 
 STAR --genomeDir $genomeDir  --readFilesIn /media/maha/Elements/ngs2-assignment/not_SRR8797509_1.part_001.fastq /media/maha/Elements/ngs2-assignment/not_SRR8797509_2.part_001.fastq --runThreadN 7
+
+runDir=/media/maha/Elements/ngs2-assignment/2pass
+mkdir $runDir
+cd $runDir
+
 STAR --genomeDir $genomeDir  --readFilesIn /media/maha/Elements/ngs2-assignment/shuffled_SRR8797509_1.part_001.fastq /media/maha/Elements/ngs2-assignment/shuffled_SRR8797509_2.part_001.fastq --runThreadN 7
 
 #3-generate & sort BAM files
@@ -35,3 +40,23 @@ for samfile in /media/maha/Elements/ngs2-assignment/1pass/*.sam;do
   samtools view -hbo $sample.bam $samfile
   samtools sort $sample.bam -o $sample.sorted.bam
 done
+
+for samfile in /media/maha/Elements/ngs2-assignment/2pass/*.sam;do
+  sample=${samfile%.sam}
+  samtools view -hbo $sample.bam $samfile
+  samtools sort $sample.bam -o $sample.sorted.bam
+done
+
+
+# 4- Merge replicates using Picard tools
+# Install Picard tools
+conda install -c bioconda picard 
+picard_path=$CONDA_PREFIX/share/picard-2.19.0-0
+# merge the replicates
+
+java -jar picard.jar AddOrReplaceReadGroups I=sAligned.out.sam O=rg_added_sorted.bam SO=coordinate RGID=id RGLB=library RGPL=platform RGPU=machine RGSM=sample 
+
+java -jar $picard_path/picard.jar MarkDuplicates I=rg_added_sorted.bam O=dedupped.bam CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT M=output.metrics 
+# check for the changes in the header
+samtools view -H rg_added_sorted.bam
+samtools view -H dedupped.bam
