@@ -64,3 +64,11 @@ samtools view -H dedupped.bam
 # 5- Split'N'Trim and reassign mapping qualities
 
 java -jar GenomeAnalysisTK.jar -T SplitNCigarReads -R ref.fasta -I dedupped.bam -o split.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS
+
+
+# 6- mapping QC
+for bamFile in *.sorted.bam;do
+  output=${bamFile%.sorted.bam}
+  samtools depth $bamFile | awk '{{sum+=$3}} END {{print "Average = ",sum/NR}}' > $output.cov
+  samtools flagstat $bamFile > $output.stat
+done
