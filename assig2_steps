@@ -27,3 +27,11 @@ cd $runDir
 
 STAR --genomeDir $genomeDir  --readFilesIn /media/maha/Elements/ngs2-assignment/not_SRR8797509_1.part_001.fastq /media/maha/Elements/ngs2-assignment/not_SRR8797509_2.part_001.fastq --runThreadN 7
 STAR --genomeDir $genomeDir  --readFilesIn /media/maha/Elements/ngs2-assignment/shuffled_SRR8797509_1.part_001.fastq /media/maha/Elements/ngs2-assignment/shuffled_SRR8797509_2.part_001.fastq --runThreadN 7
+
+#3-generate & sort BAM files
+
+for samfile in /media/maha/Elements/ngs2-assignment/1pass/*.sam;do
+  sample=${samfile%.sam}
+  samtools view -hbo $sample.bam $samfile
+  samtools sort $sample.bam -o $sample.sorted.bam
+done
