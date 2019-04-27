@@ -60,3 +60,7 @@ java -jar $picard_path/picard.jar MarkDuplicates I=rg_added_sorted.bam O=deduppe
 # check for the changes in the header
 samtools view -H rg_added_sorted.bam
 samtools view -H dedupped.bam
+
+# 5- Split'N'Trim and reassign mapping qualities
+
+java -jar GenomeAnalysisTK.jar -T SplitNCigarReads -R ref.fasta -I dedupped.bam -o split.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS
