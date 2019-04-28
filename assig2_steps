@@ -156,3 +156,12 @@ gatk --java-options "-Xmx60G" GenotypeGVCFs \
 
 ## check how many variant got annotated
 grep -v "^#" raw_variants_ann.vcf | awk '{print $3}' | grep "^rs" | wc -l
+
+#11- VCF statistics
+#11.1. indexing the VCF file
+conda install -c bioconda tabix
+bgzip -c raw_variants_ann.vcf > raw_variants_ann.vcf.gz
+tabix -p vcf raw_variants_ann.vcf.gz
+# 11.2. Calculating some statistics for the vcf
+conda install -c bioconda rtg-tools
+rtg vcfstats raw_variants_ann.vcf.gz > stats.txt
