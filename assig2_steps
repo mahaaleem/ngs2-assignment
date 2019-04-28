@@ -109,7 +109,7 @@ grep "^22" 1000G_phase1.snps.high_confidence.hg18.vcf | sed 's/^22/chr22/' >> sn
 gatk IndexFeatureFile -F snps_hg18.vcf
 
 #9- Recalibrate Bases BQSR
-for sample in *.dedup.bam;do
+for sample in /media/maha/Elements/ngs2-assignment/1pass/*.dedup.bam;do
   name=${sample%.dedup.bam}
 
   gatk --java-options "-Xmx2G" BaseRecalibrator \
