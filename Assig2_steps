@@ -196,6 +196,7 @@ mv ../{*.SNP.*,SNP.*,*.INDEL.*,INDEL.*} .
 cat SNP.DP INDEL.DP | awk '{sum+= $2; sumsq+= ($2)^2} END { print sum/NR, sqrt((sumsq-sum^2/NR)/NR), sum/NR + 5*sqrt((sumsq-sum^2/NR)/NR) }' 
 
 # 13- SNP Variant filteration
+cd ..
 gatk --java-options "-Xmx2G" VariantFiltration \
 -R gencode.v29.pc_transcripts.chr22.simplified.fa \
 -V raw_variants_ann_SNP.vcf \
