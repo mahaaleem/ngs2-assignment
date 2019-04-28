@@ -64,23 +64,27 @@ samtools view -H /media/maha/Elements/ngs2-assignment/1pass/dedupped.bam
 
 # 5- Split'N'Trim and reassign mapping qualities
 cd ..
-# as the GenomeAnalysisTK.jar is not used anymore in gatk4, the gencode.v29.pc_transcripts.chr22.simplified.fa file must be prepared to use as reference by converting it to .dict and .fai files using picard and samtools
+# 5.1. Install GATK
+conda install -c bioconda gatk4 
+
+# 5.2. as the GenomeAnalysisTK.jar is not used anymore in gatk4, the gencode.v29.pc_transcripts.chr22.simplified.fa file must be prepared to use as reference by converting it to .dict and .fai files using picard and samtools
 java -jar /home/maha/miniconda3/pkgs/picard-2.19.2-0/share/picard-2.19.2-0/picard.jar CreateSequenceDictionary REFERENCE=gencode.v29.pc_transcripts.chr22.simplified.fa OUTPUT=gencode.v29.pc_transcripts.chr22.simplified.dict
 
 samtools faidx gencode.v29.pc_transcripts.chr22.simplified.fa 
 
 gatk SplitNCigarReads -R gencode.v29.pc_transcripts.chr22.simplified.fa -I /media/maha/Elements/ngs2-assignment/1pass/dedupped.bam -O SplitN.bam -skip-mq-transform 
 
-# 6- mapping QC
-for bamFile in *.sorted.bam;do
+# 6- mapping QC 
+for bamFile in /media/maha/Elements/ngs2-assignment/1pass/*.sorted.bam;do
   output=${bamFile%.sorted.bam}
   samtools depth $bamFile | awk '{{sum+=$3}} END {{print "Average = ",sum/NR}}' > $output.cov
   samtools flagstat $bamFile > $output.stat
 done
+
 #7- Mark duplicate
-for sample in *.sorted.bam;do
+for sample in /media/maha/Elements/ngs2-assignment/1pass/*.sorted.bam;do
   name=${sample%.sorted.bam}
-  java  -Xmx2g -jar $picard_path/picard.jar MarkDuplicates INPUT=$sample OUTPUT=$name.dedup.bam METRICS_FILE=$name.metrics.txt;
+  java  -Xmx2g -jar /home/maha/miniconda3/pkgs/picard-2.19.2-0/share/picard-2.19.2-0/picard.jar MarkDuplicates INPUT=$sample OUTPUT=$name.dedup.bam METRICS_FILE=$name.metrics.txt;
 done
 
 #8- GATK varient calling
