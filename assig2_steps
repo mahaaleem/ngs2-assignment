@@ -97,3 +97,25 @@ done
 ln -s /media/maha/Elements/ngs2-assignment/gencode.v29.pc_transcripts.chr22.simplified.fa .
 java -Xmx2g -jar $picard_path/picard.jar CreateSequenceDictionary R= gencode.v29.pc_transcripts.chr22.simplified.fa O=gencode.v29.pc_transcripts.chr22.simplified.dict
 samtools faidx  gencode.v29.pc_transcripts.chr22.simplified.fa
+
+## Download known varinats
+# Download known polymorphic sites
+wget 'ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg18/1000G_phase1.snps.high_confidence.hg18.vcf.gz' -O 1000G_phase1.snps.high_confidence.hg18.vcf.gz
+# Select variants on chr22 and correct chr name
+gunzip 1000G_phase1.snps.high_confidence.hg18.vcf.gz
+grep "^#" 1000G_phase1.snps.high_confidence.hg18.vcf > snps_hg18.vcf
+grep "^22" 1000G_phase1.snps.high_confidence.hg18.vcf | sed 's/^22/chr22/' >> snps_hg18.vcf
+gatk IndexFeatureFile -F snps_hg18.vcf
+
+#9- Recalibrate Bases BQSR
+for sample in *.dedup.bam;do
+  name=${sample%.dedup.bam}
+
+  gatk --java-options "-Xmx2G" BaseRecalibrator \
+-R gencode.v29.pc_transcripts.chr22.simplified.fa -I $sample --known-sites snps_hg18.vcf \
+-O $name.report
+
+  gatk --java-options "-Xmx2G" ApplyBQSR \
+-R gencode.v29.pc_transcripts.chr22.simplified.fa -I $sample -bqsr $name.report \
+-O $name.bqsr.bam --add-output-sam-program-record --emit-original-quals
+done
