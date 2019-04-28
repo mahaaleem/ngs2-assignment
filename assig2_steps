@@ -63,9 +63,13 @@ samtools view -H /media/maha/Elements/ngs2-assignment/1pass/rg_added_sorted.bam
 samtools view -H /media/maha/Elements/ngs2-assignment/1pass/dedupped.bam
 
 # 5- Split'N'Trim and reassign mapping qualities
+cd ..
+# as the GenomeAnalysisTK.jar is not used anymore in gatk4, the gencode.v29.pc_transcripts.chr22.simplified.fa file must be prepared to use as reference by converting it to .dict and .fai files using picard and samtools
+java -jar /home/maha/miniconda3/pkgs/picard-2.19.2-0/share/picard-2.19.2-0/picard.jar CreateSequenceDictionary REFERENCE=gencode.v29.pc_transcripts.chr22.simplified.fa OUTPUT=gencode.v29.pc_transcripts.chr22.simplified.dict
 
-java -jar GenomeAnalysisTK.jar -T SplitNCigarReads -R ref.fasta -I dedupped.bam -o split.bam -rf ReassignOneMappingQuality -RMQF 255 -RMQT 60 -U ALLOW_N_CIGAR_READS
+samtools faidx gencode.v29.pc_transcripts.chr22.simplified.fa 
 
+gatk SplitNCigarReads -R gencode.v29.pc_transcripts.chr22.simplified.fa -I /media/maha/Elements/ngs2-assignment/1pass/dedupped.bam -O SplitN.bam -skip-mq-transform 
 
 # 6- mapping QC
 for bamFile in *.sorted.bam;do
