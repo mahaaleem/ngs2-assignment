@@ -4,7 +4,7 @@ conda install -c bioconda/label/cf201901 star
 
 #2- Add and align all reads 
 
-for R1 in /media/maha/Elements/ngs2-assignment/*_SRR8797509_1.part_001.fastq.gz ;do
+for R1 in /media/maha/Elements/ngs2-assignment/*_SRR8797509_1.part_001.fastq ;do
 SM=$(basename "$R1" | cut -d"_" -f1)
 LB=$(basename "$R1" | cut -d"_" -f1,2)
 PL="Illumina"
