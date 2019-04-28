@@ -34,7 +34,7 @@ cd $runDir
 STAR --genomeDir $genomeDir  --readFilesIn /media/maha/Elements/ngs2-assignment/shuffled_SRR8797509_1.part_001.fastq /media/maha/Elements/ngs2-assignment/shuffled_SRR8797509_2.part_001.fastq --runThreadN 7
 
 #3-generate & sort BAM files
-
+cd ..
 for samfile in /media/maha/Elements/ngs2-assignment/1pass/*.sam;do
   sample=${samfile%.sam}
   samtools view -hbo $sample.bam $samfile
@@ -52,14 +52,15 @@ done
 # Install Picard tools
 conda install -c bioconda picard 
 picard_path=$CONDA_PREFIX/share/picard-2.19.0-0
+
 # merge the replicates
 
-java -jar picard.jar AddOrReplaceReadGroups I=sAligned.out.sam O=rg_added_sorted.bam SO=coordinate RGID=id RGLB=library RGPL=platform RGPU=machine RGSM=sample 
+java -jar /home/maha/miniconda3/pkgs/picard-2.19.2-0/share/picard-2.19.2-0/picard.jar AddOrReplaceReadGroups I=/media/maha/Elements/ngs2-assignment/1pass/Aligned.out.sam O=/media/maha/Elements/ngs2-assignment/1pass/rg_added_sorted.bam SO=coordinate RGID=id RGLB=library RGPL=platform RGPU=machine RGSM=sample 
 
-java -jar $picard_path/picard.jar MarkDuplicates I=rg_added_sorted.bam O=dedupped.bam CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT M=output.metrics 
+java -jar /home/maha/miniconda3/pkgs/picard-2.19.2-0/share/picard-2.19.2-0/picard.jar MarkDuplicates I=/media/maha/Elements/ngs2-assignment/1pass/rg_added_sorted.bam O=/media/maha/Elements/ngs2-assignment/1pass/dedupped.bam CREATE_INDEX=true VALIDATION_STRINGENCY=SILENT M=output.metrics 
 # check for the changes in the header
-samtools view -H rg_added_sorted.bam
-samtools view -H dedupped.bam
+samtools view -H /media/maha/Elements/ngs2-assignment/1pass/rg_added_sorted.bam
+samtools view -H /media/maha/Elements/ngs2-assignment/1pass/dedupped.bam
 
 # 5- Split'N'Trim and reassign mapping qualities
 
