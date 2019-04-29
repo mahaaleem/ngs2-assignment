@@ -113,7 +113,7 @@ for sample in /media/maha/Elements/ngs2-assignment/1pass/*.dedup.bam;do
   name=${sample%.dedup.bam}
 
   gatk --java-options "-Xmx2G" BaseRecalibrator \
--R gencode.v29.pc_transcripts.chr22.simplified.fa -I $sample --known-sites snps_hg18.vcf \
+-R gencode.v29.pc_transcripts.chr22.simplified.fa -I $sample -knownSites snps_hg18.vcf \
 -O $name.report
 
   gatk --java-options "-Xmx2G" ApplyBQSR \
