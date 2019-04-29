@@ -117,7 +117,7 @@ for sample in /media/maha/Elements/ngs2-assignment/1pass/*.dedup.bam;do
 -O $name.report
 
   gatk --java-options "-Xmx2G" ApplyBQSR \
--R gencode.v29.pc_transcripts.chr22.simplified.fa -I $sample -bqsr $name.report \
+-R gencode.v29.pc_transcripts.chr22.simplified.fa -I $sample -BQSR $name.report \
 -O $name.bqsr.bam --add-output-sam-program-record --emit-original-quals
 done
 
