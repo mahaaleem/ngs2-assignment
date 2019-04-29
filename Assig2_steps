@@ -109,47 +109,68 @@ grep "^22" 1000G_phase1.snps.high_confidence.hg18.vcf | sed 's/^22/chr22/' >> sn
 gatk IndexFeatureFile -F snps_hg18.vcf
 
 #9- Recalibrate Bases BQSR
-for sample in /media/maha/Elements/ngs2-assignment/1pass/*.dedup.bam;do
+# for sample in /media/maha/Elements/ngs2-assignment/1pass/*.dedup.bam;do
   name=${sample%.dedup.bam}
 
-  gatk --java-options "-Xmx2G" BaseRecalibrator \
--R gencode.v29.pc_transcripts.chr22.simplified.fa -I $sample -knownSites snps_hg18.vcf \
+ #gatk --java-options "-Xmx2G" BaseRecalibrator \
+#-R gencode.v29.pc_transcripts.chr22.simplified.fa -I $sample --known-sites snps_hg18.vcf \
 -O $name.report
 
-  gatk --java-options "-Xmx2G" ApplyBQSR \
--R gencode.v29.pc_transcripts.chr22.simplified.fa -I $sample -BQSR $name.report \
--O $name.bqsr.bam --add-output-sam-program-record --emit-original-quals
-done
+ # gatk --java-options "-Xmx2G" ApplyBQSR \
+# -R gencode.v29.pc_transcripts.chr22.simplified.fa -I $sample -bqsr $name.report \
+# -O $name.bqsr.bam --add-output-sam-program-record --emit-original-quals
+#done
+
+# i tried to use the for loop from the tut. however it keep giving error, so i try to make another code for the recalibration
+
+gatk BaseRecalibrator \
+-R gencode.v29.pc_transcripts.chr22.simplified.fa \
+-I /media/maha/Elements/ngs2-assignment/1pass/dedupped.bam \
+--known-sites snps_hg18.vcf \
+-O /media/maha/Elements/ngs2-assignment/1pass/recalibration.table
+
+gatk PrintReads  \
+   -R gencode.v29.pc_transcripts.chr22.simplified.fa \
+   -I /media/maha/Elements/ngs2-assignment/1pass/recalibration.table \
+   -bqsr recalibration_report.grp \
+   -o /media/maha/Elements/ngs2-assignment/1pass/BQSR.bam
 
 #10- Joint variant calling using Haplotypecaller  
 #10.1. assess genotype likelihood per-sample
-for sample in sample in /media/maha/Elements/ngs2-assignment/1pass/*.bqsr.bam;do
-  name=${sample%.bqsr.bam}
+# for sample in sample in /media/maha/Elements/ngs2-assignment/1pass/*.bqsr.bam;do
+ # name=${sample%.bqsr.bam}
 
-  gatk --java-options "-Xmx2G" HaplotypeCaller \
-  -R gencode.v29.pc_transcripts.chr22.simplified.fa -I $sample \
-  --emit-ref-confidence GVCF \
-  --pcr-indel-model NONE \
-  -O $name.gvcf
-done
+  #gatk --java-options "-Xmx2G" HaplotypeCaller \
+  #-R gencode.v29.pc_transcripts.chr22.simplified.fa -I $sample \
+ # --emit-ref-confidence GVCF \
+#  --pcr-indel-model NONE \
+#  -O $name.gvcf
+#done
 #10.2. combine samples
-gatk --java-options "-Xmx2G" CombineGVCFs \
--R gencode.v29.pc_transcripts.chr22.simplified.fa \
--V BD143_TGACCA_merged.gvcf \
--V BD174_CAGATC_L005.gvcf \
--V BD225_TAGCTT_L007.gvcf \
--O raw_variants.gvcf
+#gatk --java-options "-Xmx2G" CombineGVCFs \
+#-R gencode.v29.pc_transcripts.chr22.simplified.fa \
+#-V BD143_TGACCA_merged.gvcf \
+#-V BD174_CAGATC_L005.gvcf \
+#-V BD225_TAGCTT_L007.gvcf \
+#-O raw_variants.gvcf
 #10.3. Joint Genotyping
-gatk --java-options "-Xmx60G" GenotypeGVCFs \
--R gencode.v29.pc_transcripts.chr22.simplified.fa \
--V raw_variants.gvcf \
---max-alternate-alleles 6 \
--O raw_variants.vcf
+#gatk --java-options "-Xmx60G" GenotypeGVCFs \
+#-R gencode.v29.pc_transcripts.chr22.simplified.fa \
+#-V raw_variants.gvcf \
+#--max-alternate-alleles 6 \
+#-O raw_variants.vcf
+
+# 10. Varient calling (i used the output from the merge step as it is the last output i got)
+gatk HaplotypeCaller  \
+  -R gencode.v29.pc_transcripts.chr22.simplified.fa  \
+  -I /media/maha/Elements/ngs2-assignment/1pass/dedupped.bam \
+  -O Output.gvcf
+
 
 ##10.4. annotated output
 gatk --java-options "-Xmx60G" GenotypeGVCFs \
 -R gencode.v29.pc_transcripts.chr22.simplified.fa \
--V raw_variants.gvcf \
+-V Output.gvcf \
 --max-alternate-alleles 6 \
 --dbsnp snps_hg18.vcf \
 -O raw_variants_ann.vcf
