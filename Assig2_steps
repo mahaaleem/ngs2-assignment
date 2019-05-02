@@ -184,85 +184,31 @@ gatk --java-options "-Xmx60G" GenotypeGVCFs \
 --dbsnp snps_hg18.vcf \
 -O raw_variants_ann.vcf
 
+# the error in this step (10.4. annotated output) is: A USER ERROR has occurred: Input files reference and features have incompatible contigs: No overlapping contigs found.
+###
+
 ## check how many variant got annotated
-grep -v "^#" raw_variants_ann.vcf | awk '{print $3}' | grep "^rs" | wc -l
+#grep -v "^#" raw_variants_ann.vcf | awk '{print $3}' | grep "^rs" | wc -l
 
-#11- VCF statistics
-#11.1. indexing the VCF file
+#11- VCF statistics 
+#11.1. indexing the VCF file , i run it form using Output.gvcf as i got no output from 10.4. annoted output step  
 conda install -c bioconda tabix
-bgzip -c raw_variants_ann.vcf > raw_variants_ann.vcf.gz
-tabix -p vcf raw_variants_ann.vcf.gz
+bgzip -c Output.gvcf.vcf > Output.gvcf.gz
+tabix -p vcf  Output.gvcf.gz
 
-# 11.2. Calculating some statistics for the vcf
+# 11.2. Calculating some statistics for the gvcf 
 conda install -c bioconda rtg-tools
-rtg vcfstats raw_variants_ann.vcf.gz > stats.txt
+rtg vcfstats  Output.gvcf.gz > stats.txt
+## as the file used is not the desired vcf the formed sats.txt file results is 0 
 
-#12- Split SNPs and indels
-gatk --java-options "-Xmx2G" SelectVariants \
+#12. gatk Variant Filtration
+gatk VariantFiltration \
 -R gencode.v29.pc_transcripts.chr22.simplified.fa \
--V raw_variants_ann.vcf \
---select-type-to-include SNP \
--O raw_variants_ann_SNP.vcf
+-V Output.gvcf \
+-O Filterd_Output.gvcf \
+--filter-name "my_filter1" --filter-expression "AB < 0.2" --filter-name "my_filter2" --filter-expression "MQ0 > 50"
 
-gatk --java-options "-Xmx2G" SelectVariants \
--R gencode.v29.pc_transcripts.chr22.simplified.fa \
--V raw_variants_ann.vcf \
---select-type-to-include INDEL \
--O raw_variants_ann_INDEL.vc
 
-## Assess the different filters in both known and novel
-for var in "SNP" "INDEL";do
- input="raw_variants_ann_"$var".vcf"
- for filter in "QD" "MQ" "MQRankSum" "FS" "SOR" "ReadPosRankSum" "AN" "DP" "InbreedingCoeff";do
-  filterValues=$var.$filter
-  awk -v k="$filter=" '!/#/{n=split($8,a,";"); for(i=1;i<=n;i++) if(a[i]~"^"k) {sub(k,$3" ",a[i]); print a[i]}}' $input > $filterValues
-  grep -v "^\." $filterValues > known.$var.$filter
-  grep "^\." $filterValues > novel.$var.$filter
-done; done
-mkdir filters && cd filters
-mv ../{*.SNP.*,SNP.*,*.INDEL.*,INDEL.*} .
 
-## Calculating the DP threathols
-cat SNP.DP INDEL.DP | awk '{sum+= $2; sumsq+= ($2)^2} END { print sum/NR, sqrt((sumsq-sum^2/NR)/NR), sum/NR + 5*sqrt((sumsq-sum^2/NR)/NR) }' 
 
-# 13- SNP Variant filteration
-cd ..
-gatk --java-options "-Xmx2G" VariantFiltration \
--R gencode.v29.pc_transcripts.chr22.simplified.fa \
--V raw_variants_ann_SNP.vcf \
---filter-name "snpQD" \
---filter-expression "vc.hasAttribute('QD') && QD < 2.0" \
---filter-name "snpMQ" \
---filter-expression "vc.hasAttribute('MQ') && MQ < 40.0" \
---filter-name "snpMQRankSum" \
---filter-expression "vc.hasAttribute('MQRankSum') && MQRankSum < -12.5" \
---filter-name "snpFS" \
---filter-expression "vc.hasAttribute('FS') && FS > 60.0" \
---filter-name "snpSOR" \
---filter-expression "vc.hasAttribute('SOR') && SOR > 4.0" \
---filter-name "snpReadPosRankSum" \
---filter-expression "vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -8.0" \
---filter-name "snpDP" \
---filter-expression "vc.hasAttribute('DP') && DP > 3105" \
--O raw_variants_ann_SNP_clean.vcf
 
-## checking the filtered record
-grep -v "^#" raw_variants_ann_SNP_clean.vcf | awk '{if($7!="PASS")print $0}'
-
-# 14- INDEL Variant filteration
-gatk --java-options "-Xmx2G" VariantFiltration \
--R gencode.v29.pc_transcripts.chr22.simplified.fa \
--V raw_variants_ann_SNP.vcf \
---filter-name "indelQD" \
---filter-expression "vc.hasAttribute('QD') && QD < 2.0" \
---filter-name "indelFS" \
---filter-expression "vc.hasAttribute('FS') && FS > 200.0" \
---filter-name "indelSOR" \
---filter-expression "vc.hasAttribute('SOR') && SOR > 10.0" \
---filter-name "indelReadPosRankSum" \
---filter-expression "vc.hasAttribute('ReadPosRankSum') && ReadPosRankSum < -20.0" \
---filter-name "indelInbreedingCoeff" \
---filter-expression "vc.hasAttribute('InbreedingCoeff') && InbreedingCoeff < -0.8" \
---filter-name "indelDP" \
---filter-expression "vc.hasAttribute('DP') && DP > 3105" \
--O raw_variants_ann_INDEL_clean.vcf
