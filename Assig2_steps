@@ -1,3 +1,7 @@
+mkdir ngs2-assignment && cd n ngs2-assignment
+
+# the main files in ngs2_assignment:gencode.v29.pc_transcripts.chr22.simplified.fa, not_SRR8797509_1.part_001.fastq, not_SRR8797509_2.part_001.fastq, shuffled_SRR8797509_1.part_001.fastq, and shuffled_SRR8797509_2.part_001.fastq
+
 # 1- Install STAR 2 tools
 conda install -c bioconda star 
 conda install -c bioconda/label/cf201901 star 
@@ -20,19 +24,21 @@ genomeDir=/media/maha/Elements/ngs2-assignment/chr22
 mkdir $genomeDir
 STAR --runMode genomeGenerate --genomeDir $genomeDir --genomeFastaFiles /media/maha/Elements/ngs2-assignment/gencode.v29.pc_transcripts.chr22.simplified.fa --runThreadN 7
 
-
+#alignment for not_shuffled 
 runDir=/media/maha/Elements/ngs2-assignment/1pass
 mkdir $runDir
 cd $runDir
 
 STAR --genomeDir $genomeDir  --readFilesIn /media/maha/Elements/ngs2-assignment/not_SRR8797509_1.part_001.fastq /media/maha/Elements/ngs2-assignment/not_SRR8797509_2.part_001.fastq --runThreadN 7
 
+#alignment for shuffled 
 runDir=/media/maha/Elements/ngs2-assignment/2pass
 mkdir $runDir
 cd $runDir
 
 STAR --genomeDir $genomeDir  --readFilesIn /media/maha/Elements/ngs2-assignment/shuffled_SRR8797509_1.part_001.fastq /media/maha/Elements/ngs2-assignment/shuffled_SRR8797509_2.part_001.fastq --runThreadN 7
 
+# Starting from the step below , we wil work on not_shuffled only (folder 1pass)
 #3-generate & sort BAM files
 cd ..
 for samfile in /media/maha/Elements/ngs2-assignment/1pass/*.sam;do
@@ -134,6 +140,9 @@ gatk PrintReads  \
    -I /media/maha/Elements/ngs2-assignment/1pass/recalibration.table \
    -bqsr recalibration_report.grp \
    -o /media/maha/Elements/ngs2-assignment/1pass/BQSR.bam
+
+#
+
 
 #10- Joint variant calling using Haplotypecaller  
 #10.1. assess genotype likelihood per-sample
