@@ -1,0 +1,3 @@
+Location                     : Output.gvcf.gz
+Failed Filters               : 0
+Passed Filters               : 0
