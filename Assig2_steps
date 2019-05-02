@@ -129,6 +129,8 @@ gatk IndexFeatureFile -F snps_hg18.vcf
 
 # i tried to use the for loop from the tut. however it keep giving error, so i try to make another code for the recalibration
 
+# i upload a file containg screen shots of the error appeared in recalibration code (the file below)
+
 gatk BaseRecalibrator \
 -R gencode.v29.pc_transcripts.chr22.simplified.fa \
 -I /media/maha/Elements/ngs2-assignment/1pass/dedupped.bam \
@@ -140,8 +142,6 @@ gatk PrintReads  \
    -I /media/maha/Elements/ngs2-assignment/1pass/recalibration.table \
    -bqsr recalibration_report.grp \
    -o /media/maha/Elements/ngs2-assignment/1pass/BQSR.bam
-
-#
 
 
 #10- Joint variant calling using Haplotypecaller  
